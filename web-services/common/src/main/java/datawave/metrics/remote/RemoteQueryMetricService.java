@@ -12,9 +12,7 @@ import datawave.webservice.common.remote.RemoteHttpService;
 import datawave.webservice.query.metric.BaseQueryMetric;
 import datawave.webservice.query.metric.BaseQueryMetricListResponse;
 import datawave.webservice.result.VoidResponse;
-import datawave.webservice.util.NotEqualPropertyExpressionInterpreter;
 import org.apache.deltaspike.core.api.config.ConfigProperty;
-import org.apache.deltaspike.core.api.exclude.Exclude;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -42,7 +40,6 @@ import java.util.function.Supplier;
 @Alternative
 // Make this alternative active for the entire application per the CDI 1.2 specification
 @Priority(Interceptor.Priority.APPLICATION)
-@Exclude(onExpression = "dw.remoteQueryMetricService.useRemoteService!=true", interpretedBy = NotEqualPropertyExpressionInterpreter.class)
 public class RemoteQueryMetricService extends RemoteHttpService {
     
     private static final String UPDATE_METRIC_SUFFIX = "updateMetric";
