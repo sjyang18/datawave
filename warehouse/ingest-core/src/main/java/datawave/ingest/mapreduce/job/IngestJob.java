@@ -980,9 +980,9 @@ public class IngestJob implements Tool {
         // Setup the Output
         job.setWorkingDirectory(workDirPath);
         if (outputMutations) {
-            CBMutationOutputFormatter.configure()
-                            .clientProperties(Accumulo.newClientProperties().to(instanceName, zooKeepers).as(userName, new PasswordToken(password)).build())
-                            .createTables(true).store(job);
+            AccumuloHelper cbHelper = new AccumuloHelper();
+            cbHelper.setup(conf);
+            CBMutationOutputFormatter.configure().clientProperties(cbHelper.newClientProperties()).createTables(true).store(job);
             job.setOutputFormatClass(CBMutationOutputFormatter.class);
         } else {
             FileOutputFormat.setOutputPath(job, new Path(workDirPath, "mapFiles"));

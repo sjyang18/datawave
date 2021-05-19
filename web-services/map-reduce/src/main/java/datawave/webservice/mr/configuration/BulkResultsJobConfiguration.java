@@ -24,6 +24,7 @@ import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriterConfig;
 import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.AccumuloClient.ConnectionOptions;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Range;
@@ -50,6 +51,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -193,10 +195,10 @@ public class BulkResultsJobConfiguration extends MapReduceJobConfiguration imple
                 job.setOutputFormatClass(AccumuloOutputFormat.class);
                 
                 // @formatter:off
-                Properties clientProps = Accumulo.newClientProperties()
-                        .to(instanceName, zookeepers)
-                        .as(user, password)
-                        .batchWriterConfig(new BatchWriterConfig()
+                Properties clientProps = newAccumuloClientConnectionOptions(
+                            instanceName, zookeepers,
+                            user, password
+                        ).batchWriterConfig(new BatchWriterConfig()
                                 .setMaxLatency(30, TimeUnit.SECONDS)
                                 .setMaxMemory(10485760)
                                 .setMaxWriteThreads(2))
@@ -220,6 +222,15 @@ public class BulkResultsJobConfiguration extends MapReduceJobConfiguration imple
             throw new QueryException(DatawaveErrorCode.JOB_STARTING_ERROR, e);
         }
         
+    }
+    
+    private ConnectionOptions<Properties> newAccumuloClientConnectionOptions(String instanceName, String zookeepers, String userName, String password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClientProperties().from(propsPath).as(userName, password);
+        } else {
+            return Accumulo.newClientProperties().to(instanceName, zookeepers).as(userName, password);
+        }
     }
     
     /**

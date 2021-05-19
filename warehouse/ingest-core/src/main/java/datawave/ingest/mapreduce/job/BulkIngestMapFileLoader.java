@@ -2,6 +2,7 @@ package datawave.ingest.mapreduce.job;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import datawave.ingest.data.config.ingest.AccumuloHelper;
 import datawave.ingest.data.TypeRegistry;
 import datawave.ingest.mapreduce.StandaloneStatusReporter;
 import datawave.util.cli.PasswordConverter;
@@ -381,7 +382,7 @@ public final class BulkIngestMapFileLoader implements Runnable {
         this.instanceName = instanceName;
         this.zooKeepers = zooKeepers;
         // this will keep an active connection open to Accumulo and must be closed during shutdown
-        this.accumuloClient = Accumulo.newClient().to(instanceName, zooKeepers).as(user, passToken).build();
+        this.accumuloClient = AccumuloHelper.newClient(instanceName, zooKeepers, user, passToken);
         this.seqFileHdfs = seqFileHdfs;
         this.srcHdfs = srcHdfs;
         this.destHdfs = destHdfs;

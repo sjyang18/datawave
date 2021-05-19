@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import datawave.util.cli.PasswordConverter;
+import datawave.webservice.common.connection.AccumuloClientPoolFactory;
 import datawave.webservice.query.metric.BaseQueryMetric;
 import datawave.webservice.query.metric.BaseQueryMetric.PageMetric;
 
-import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.IteratorSetting;
@@ -155,7 +155,7 @@ public class QueryMetricsReporter {
         }
         
         // Open up a BatchScanner to the QueryMetrics table
-        try (AccumuloClient client = Accumulo.newClient().to(instanceName, zookeepers).as(username, new PasswordToken(password)).build();
+        try (AccumuloClient client = AccumuloClientPoolFactory.newAccumuloClient(instanceName, zookeepers, username, new PasswordToken(password));
                         BatchScanner bs = client.createBatchScanner(tableName, Authorizations.EMPTY, 8)) {
             // Set a range for the entire table
             Range r = null;

@@ -1,8 +1,15 @@
 package datawave.metrics.util;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+
 import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.AccumuloException;
@@ -26,12 +33,6 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Counters;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
-import static java.util.Map.Entry;
-
 /**
  * Upgrades the serialized counters in the values of the supplied table from Hadoop 0/1.x wire format to Hadoop 2.x wire format. This class has no real way to
  * tell if the value is actually a counters object, so it is up to the called to ensure the correct range is passed to ensure only value objects are returned by
@@ -54,7 +55,7 @@ public class UpgradeCounterValues {
     protected void run(String[] args) throws ParseException, AccumuloSecurityException, AccumuloException, TableNotFoundException, IOException {
         parseConfig(args);
         
-        try (AccumuloClient client = Accumulo.newClient().to(instanceName, zookeepers).as(username, password).build()) {
+        try (AccumuloClient client = Connections.getAccumuloClient(instanceName, zookeepers, username, password)) {
             Authorizations auths = client.securityOperations().getUserAuthorizations(client.whoami());
             try (BatchWriter writer = client.createBatchWriter(tableName, new BatchWriterConfig().setMaxWriteThreads(bwThreads).setMaxMemory(bwMemory)
                             .setMaxLatency(60, TimeUnit.SECONDS));

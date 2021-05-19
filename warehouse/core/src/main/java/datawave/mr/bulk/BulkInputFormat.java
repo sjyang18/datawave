@@ -1073,8 +1073,12 @@ public class BulkInputFormat extends InputFormat<Key,Value> {
         if (conf.getBoolean(MOCK, false))
             return new InMemoryTabletLocator();
         String tableName = getTablename(conf);
-        Properties props = Accumulo.newClientProperties().to(conf.get(INSTANCE_NAME), conf.get(ZOOKEEPERS))
-                        .as(getUsername(conf), new PasswordToken(getPassword(conf))).build();
+        AccumuloHelper cHelper = AccumuloHelper.newHelper(conf.get(INSTANCE_NAME), conf.get(ZOOKEEPERS), getUsername(conf), getPassword(conf));
+        Properties props = cHelper.newClientProperties();
+        /*
+         * leaving the previous block for reference, will clean up later. Properties props = Accumulo.newClientProperties().to(conf.get(INSTANCE_NAME),
+         * conf.get(ZOOKEEPERS)) .as(getUsername(conf), new PasswordToken(getPassword(conf))).build();
+         */
         ClientContext context = new ClientContext(ClientInfo.from(props));
         return TabletLocator.getLocator(context, Tables.getTableId(context, tableName));
     }

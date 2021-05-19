@@ -1,5 +1,6 @@
 package datawave.query.util;
 
+import datawave.ingest.data.config.ingest.AccumuloHelper;
 import datawave.webservice.common.cache.SharedCacheCoordinator;
 import datawave.webservice.common.cache.SharedTriState;
 import datawave.webservice.common.cache.SharedTriStateListener;
@@ -116,7 +117,7 @@ public class MetadataHelperUpdateHdfsListener {
                             log.debug("table:" + metadataTableName + " " + this + " setTriState to UPDATING");
                         }
                         // get a connection for my MetadataHelper, and get the TypeMetadata map
-                        try (AccumuloClient client = Accumulo.newClient().to(instance, zookeepers).as(username, password).build()) {
+                        try (AccumuloClient client = AccumuloHelper.newHelper(instance, zookeepers, username, password).newClient()) {
                             TypeMetadataHelper typeMetadataHelper = this.typeMetadataHelperFactory.createTypeMetadataHelper(client, metadataTableName,
                                             allMetadataAuths, false);
                         }

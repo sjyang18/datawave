@@ -379,8 +379,8 @@ public class MultiRFileOutputFormatter extends FileOutputFormat<BulkIngestKey,Va
     protected void setTableIdsAndConfigs() throws IOException {
         tableConfigs = new HashMap<>();
         Iterable<String> localityGroupTables = Splitter.on(",").split(conf.get(CONFIGURE_LOCALITY_GROUPS, ""));
-        try (AccumuloClient client = Accumulo.newClient().to(conf.get(INSTANCE_NAME), conf.get(ZOOKEEPERS))
-                        .as(conf.get(USERNAME), new PasswordToken(Base64.decodeBase64(conf.get(PASSWORD)))).build()) {
+        try (AccumuloClient client = AccumuloHelper.newClient(conf.get(INSTANCE_NAME), conf.get(ZOOKEEPERS), conf.get(USERNAME),
+                        new PasswordToken(Base64.decodeBase64(conf.get(PASSWORD))))) {
             tableIds = client.tableOperations().tableIdMap();
             Set<String> compressionTableBlackList = getCompressionTableBlackList(conf);
             String compressionType = getCompressionType(conf);

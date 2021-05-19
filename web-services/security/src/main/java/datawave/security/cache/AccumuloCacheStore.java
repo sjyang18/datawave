@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
+import datawave.webservice.common.connection.AccumuloClientPoolFactory;
+
 import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.AccumuloException;
@@ -68,10 +70,9 @@ public class AccumuloCacheStore<K extends Serializable,V> implements AdvancedLoa
     @Override
     public void start() {
         // @formatter:off
-        accumuloClient = Accumulo.newClient()
-                .to(configuration.instanceName(), configuration.zookeepers())
-                .as(configuration.username(), configuration.password())
-                .build();
+        accumuloClient = AccumuloClientPoolFactory.newAccumuloClient(
+                configuration.instanceName(), configuration.zookeepers(),
+                configuration.username(), configuration.password());
         // @formatter:on
         
         IteratorSetting ageoffConfig = new IteratorSetting(configuration.ageoffPriority(), AgeOffFilter.class.getSimpleName(), AgeOffFilter.class);

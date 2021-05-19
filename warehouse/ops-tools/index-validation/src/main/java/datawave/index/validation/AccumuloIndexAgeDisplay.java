@@ -23,6 +23,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,7 +57,17 @@ public class AccumuloIndexAgeDisplay implements AutoCloseable {
     
     public AccumuloIndexAgeDisplay(String instanceName, String zookeepers, String tableName, String columns, String userName, PasswordToken password,
                     Integer[] buckets) {
-        this(Accumulo.newClient().to(instanceName, zookeepers).as(userName, password).build(), tableName, columns, buckets);
+        // this(Accumulo.newClient().to(instanceName, zookeepers).as(userName, password).build(), tableName, columns, buckets);
+        this(newAccumuloClient(instanceName, zookeepers, userName, password), tableName, columns, buckets);
+    }
+    
+    private static AccumuloClient newAccumuloClient(String instanceName, String zookeepers, String userName, PasswordToken password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClient().from(propsPath).as(userName, password).build();
+        } else {
+            return Accumulo.newClient().to(instanceName, zookeepers).as(userName, password).build();
+        }
     }
     
     @Override

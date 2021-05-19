@@ -1,5 +1,6 @@
 package datawave.ingest.util;
 
+import datawave.ingest.data.config.ingest.AccumuloHelper;
 import datawave.util.StringUtils;
 import datawave.util.cli.PasswordConverter;
 import datawave.util.time.DateHelper;
@@ -155,7 +156,7 @@ public class GenerateShardSplits {
         
         if (username != null) {
             // Connect to accumulo
-            try (AccumuloClient client = Accumulo.newClient().to(instanceName, zookeepers).as(username, new PasswordToken(password)).build()) {
+            try (AccumuloClient client = AccumuloHelper.newClient(instanceName, zookeepers, username, new PasswordToken(password))) {
                 // add the splits
                 if (addSplits) {
                     client.tableOperations().addSplits(tableName, splits);

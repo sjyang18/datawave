@@ -4,6 +4,7 @@ import datawave.ingest.table.config.AbstractTableConfigHelper;
 import datawave.metrics.config.MetricsConfig;
 import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.AccumuloClient.ConnectionOptions;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.admin.TableOperations;
@@ -12,7 +13,9 @@ import org.apache.accumulo.core.iterators.IteratorUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
+import java.nio.file.Paths;
 import java.util.LinkedList;
+import java.util.Properties;
 
 public class Connections {
     private static final Logger log = Logger.getLogger(Connections.class);
@@ -92,15 +95,33 @@ public class Connections {
         }
     }
     
+    public static ConnectionOptions<Properties> newAccumuloClientConnectionOptions(String instanceName, String zookeepers, String userName, String password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClientProperties().from(propsPath).as(userName, password);
+        } else {
+            return Accumulo.newClientProperties().to(instanceName, zookeepers).as(userName, password);
+        }
+    }
+    
+    public static AccumuloClient getAccumuloClient(String instanceName, String zookeepers, String userName, String password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClient().from(propsPath).as(userName, password).build();
+        } else {
+            return Accumulo.newClient().to(instanceName, zookeepers).as(userName, password).build();
+        }
+    }
+    
     public static AccumuloClient metricsClient(Configuration c) throws AccumuloException, AccumuloSecurityException {
         final String mtxZk = c.get(MetricsConfig.ZOOKEEPERS), mtxInst = c.get(MetricsConfig.INSTANCE), mtxUser = c.get(MetricsConfig.USER), mtxPass = c
                         .get(MetricsConfig.PASS);
-        return Accumulo.newClient().to(mtxInst, mtxZk).as(mtxUser, mtxPass).build();
+        return getAccumuloClient(mtxInst, mtxZk, mtxUser, mtxPass);
     }
     
     public static AccumuloClient warehouseClient(Configuration c) throws AccumuloException, AccumuloSecurityException {
         final String whZk = c.get(MetricsConfig.WAREHOUSE_ZOOKEEPERS), whInst = c.get(MetricsConfig.WAREHOUSE_INSTANCE), whUser = c
                         .get(MetricsConfig.WAREHOUSE_USERNAME), whPass = c.get(MetricsConfig.WAREHOUSE_PASSWORD);
-        return Accumulo.newClient().to(whInst, whZk).as(whUser, whPass).build();
+        return getAccumuloClient(whInst, whZk, whUser, whPass);
     }
 }

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import datawave.ingest.data.config.ingest.AccumuloHelper;
 import datawave.util.CounterDump.CounterSource;
 import datawave.util.cli.PasswordConverter;
 
@@ -16,6 +17,7 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 import com.google.common.collect.Lists;
@@ -40,7 +42,9 @@ public class AccumuloCounterSource extends CounterSource {
     
     public AccumuloCounterSource(String instanceStr, String zookeepers, String username, String password, String table) throws AccumuloException,
                     AccumuloSecurityException {
-        client = Accumulo.newClient().to(instanceStr, zookeepers).as(username, password).build();
+        
+        AccumuloHelper cHelper = AccumuloHelper.newHelper(instanceStr, zookeepers, username, password);
+        client = cHelper.newClient();
         queryTable = table;
         this.username = username;
     }

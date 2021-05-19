@@ -1,7 +1,10 @@
 package datawave.webservice.common.connection;
 
+import java.nio.file.Paths;
+
 import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.AccumuloClient;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -27,8 +30,27 @@ public class AccumuloClientPoolFactory implements PooledObjectFactory<AccumuloCl
      * Returns a new CB Connection
      */
     public PooledObject<AccumuloClient> makeObject() throws Exception {
-        AccumuloClient c = Accumulo.newClient().to(instanceName, zookeepers).as(username, password).build();
+        // AccumuloClient c = Accumulo.newClient().to(instanceName, zookeepers).as(username, password).build();
+        AccumuloClient c = newAccumuloClient(instanceName, zookeepers, username, password);
         return new DefaultPooledObject<>(c);
+    }
+    
+    public static AccumuloClient newAccumuloClient(String instanceName, String zookeepers, String username, String password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClient().from(propsPath).as(username, password).build();
+        } else {
+            return Accumulo.newClient().to(instanceName, zookeepers).as(username, password).build();
+        }
+    }
+    
+    public static AccumuloClient newAccumuloClient(String instanceName, String zookeepers, String username, PasswordToken password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClient().from(propsPath).as(username, password).build();
+        } else {
+            return Accumulo.newClient().to(instanceName, zookeepers).as(username, password).build();
+        }
     }
     
     String getUsername() {

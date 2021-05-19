@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import datawave.accumulo.inmemory.InMemoryAccumuloClient;
+import datawave.ingest.data.config.ingest.AccumuloHelper;
 import datawave.webservice.common.connection.AccumuloConnectionFactory;
 import datawave.webservice.common.connection.AccumuloConnectionFactory.Priority;
 
@@ -317,7 +318,7 @@ public class AccumuloRecordWriter extends RecordWriter<Text,Mutation> {
             client.securityOperations().changeLocalUserPassword(client.whoami(), new PasswordToken(getPassword(conf)));
             return client;
         } else {
-            return Accumulo.newClient().to(conf.get(INSTANCE_NAME), conf.get(ZOOKEEPERS)).as(getUsername(conf), new PasswordToken(getPassword(conf))).build();
+            return AccumuloHelper.newClient(conf.get(INSTANCE_NAME), conf.get(ZOOKEEPERS), getUsername(conf), new PasswordToken(getPassword(conf)));
         }
     }
     

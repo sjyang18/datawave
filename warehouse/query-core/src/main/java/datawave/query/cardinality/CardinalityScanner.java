@@ -13,7 +13,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import datawave.common.cl.OptionBuilder;
+import datawave.ingest.data.config.ingest.AccumuloHelper;
 import datawave.security.util.ScannerHelper;
 import datawave.util.cli.PasswordConverter;
 
@@ -205,8 +207,8 @@ public class CardinalityScanner {
                     DatatypeAggregationType datatypeAggregationType) throws Exception {
         
         Map<CardinalityIntersectionRecord,HyperLogLogPlus> cardinalityMap = new TreeMap<>();
-        try (AccumuloClient client = Accumulo.newClient().to(config.getInstanceName(), config.getZookeepers()).as(config.getUsername(), config.getPassword())
-                        .build()) {
+        try (AccumuloClient client = AccumuloHelper.newHelper(config.getInstanceName(), config.getZookeepers(), config.getUsername(), config.getPassword())
+                        .newClient()) {
             Collection<Authorizations> authCollection = Collections.singleton(new Authorizations(config.getAuths().split(",")));
             if (!client.tableOperations().exists(config.getTableName())) {
                 throw new IllegalArgumentException("Table " + config.getTableName() + " does not exist");

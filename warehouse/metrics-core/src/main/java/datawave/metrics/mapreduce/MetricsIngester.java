@@ -15,6 +15,7 @@ import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.client.AccumuloClient.ConnectionOptions;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Range;
@@ -43,6 +44,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -84,6 +86,15 @@ public class MetricsIngester extends Configured implements Tool {
     protected static final Value emptyValue = new Value(emptyBytes);
     
     private static final int MAX_FILES = 2000;
+    
+    public static ConnectionOptions<Properties> getAccumuloClientConnectionOptions(String instanceName, String zookeepers, String userName, String password) {
+        final String propsPath = System.getenv("ACCUMULO_CLIENT_PROPS");
+        if (propsPath != null && Paths.get(propsPath).toFile().exists()) {
+            return Accumulo.newClientProperties().from(propsPath).as(userName, password);
+        } else {
+            return Accumulo.newClientProperties().to(instanceName, zookeepers).as(userName, password);
+        }
+    }
     
     @Override
     public int run(String[] args) throws Exception {
@@ -162,10 +173,11 @@ public class MetricsIngester extends Configured implements Tool {
             final String userName = conf.get(MetricsConfig.USER);
             final String password = conf.get(MetricsConfig.PASS);
             // @formatter:off
-            Properties clientProps = Accumulo.newClientProperties()
-                    .to(instanceName, zookeepers).as(userName, password)
-                    .batchWriterConfig(new BatchWriterConfig().setMaxLatency(25, TimeUnit.MILLISECONDS))
-                    .build();
+            Properties clientProps = getAccumuloClientConnectionOptions(
+                    instanceName, zookeepers, userName, password
+                )
+                .batchWriterConfig(new BatchWriterConfig().setMaxLatency(25, TimeUnit.MILLISECONDS))
+                .build();
             AccumuloOutputFormat.configure()
                     .clientProperties(clientProps)
                     .createTables(createTables)
@@ -301,9 +313,16 @@ public class MetricsIngester extends Configured implements Tool {
         job.setReducerClass(ProcessingErrorsReducer.class);
         job.setNumReduceTasks(1);
         
-        Properties clientProps = Accumulo.newClientProperties().to(conf.get(MetricsConfig.WAREHOUSE_INSTANCE), conf.get(MetricsConfig.WAREHOUSE_ZOOKEEPERS))
-                        .as(conf.get(MetricsConfig.WAREHOUSE_USERNAME), conf.get(MetricsConfig.WAREHOUSE_PASSWORD, ""))
-                        .batchWriterConfig(new BatchWriterConfig().setMaxLatency(25, TimeUnit.MILLISECONDS)).build();
+        // @formatter:off
+        Properties clientProps = getAccumuloClientConnectionOptions(
+                conf.get(MetricsConfig.WAREHOUSE_INSTANCE), 
+                conf.get(MetricsConfig.WAREHOUSE_ZOOKEEPERS), 
+                conf.get(MetricsConfig.WAREHOUSE_USERNAME),
+                conf.get(MetricsConfig.WAREHOUSE_PASSWORD, "")
+            )
+            .batchWriterConfig(new BatchWriterConfig().setMaxLatency(25, TimeUnit.MILLISECONDS))
+            .build();
+        // @formatter:off
         
         job.setInputFormatClass(AccumuloInputFormat.class);
         job.setOutputFormatClass(AccumuloOutputFormat.class);

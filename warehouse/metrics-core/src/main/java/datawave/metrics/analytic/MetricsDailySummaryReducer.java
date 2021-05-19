@@ -3,7 +3,6 @@ package datawave.metrics.analytic;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Longs;
-import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
@@ -14,6 +13,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.lib.aggregate.LongValueSum;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
+
+import datawave.metrics.util.Connections;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -175,7 +176,7 @@ public class MetricsDailySummaryReducer extends Reducer<Key,Value,Text,Mutation>
         job.setOutputFormatClass(AccumuloOutputFormat.class);
         // @formatter:off
         AccumuloOutputFormat.configure()
-                .clientProperties(Accumulo.newClientProperties().to(instance,zookeepers).as(userName, password).build())
+                .clientProperties(Connections.newAccumuloClientConnectionOptions(instance,zookeepers,userName,password).build())
                 .createTables(true)
                 .defaultTable(outputTable)
                 .store(job);
